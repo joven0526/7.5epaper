@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>电子价签控制助手</title>
+    <style>
+        :root {
+            /* 科技感主色调 */
+            --primary-color: #165DFF;
+            --primary-light: #4080FF;
+            --primary-dark: #0E42D2;
+            --primary-glow: rgba(22, 93, 255, 0.3);
+            
+            /* 辅助色 */
+            --secondary-color: #0FC6C2;
+            --secondary-light: #36DBCA;
+            --secondary-dark: #0AA8A4;
+            --danger-color: #F53F3F;
+            --warning-color: #FF7D00;
+            --success-color: #00B42A;
+            
+            /* 暗黑模式配色 */
+            --dark-bg: #0F172A;
+            --dark-card-bg: #1E293B;
+            --dark-card-hover: #273449;
+            --dark-text: #E2E8F0;
+            --dark-text-light: #94A3B8;
+            --dark-border: #334155;
+            --dark-code-bg: #2D3748;
+            --dark-log-bg: #1E293B;
+            --dark-input-bg: #2D3748;
+            --dark-input-text: #E2E8F0;
+            
+            /* 通用变量 */
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+            --shadow-glow: 0 0 15px var(--primary-glow);
+            --border-radius-sm: 6px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --transition-fast: all 0.2s ease;
+            --transition-normal: all 0.3s ease;
+            --transition-slow: all 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            min-height: 100vh;
+            color: #1E293B;
+            line-height: 1.6;
+            transition: var(--transition-normal);
+        }
+
+        /* 暗黑模式基础样式 */
+        body.debug-mode {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--dark-text);
+        }
+
+        /* 容器样式 */
+        .main {
+            width: 100%;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* 标题样式 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(22, 93, 255, 0.1);
+        }
+
+        .page-header h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .page-header p {
+            color: #64748B;
+            font-size: 0.95rem;
+        }
+
+        body.debug-mode .page-header {
+            border-bottom-color: var(--dark-border);
+        }
+
+        body.debug-mode .page-header p {
+            color: var(--dark-text-light);
+        }
+
+        /* 卡片(Fieldset)样式 - 科技感卡片设计 */
+        .card {
+            background: #FFFFFF;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.8rem;
+            border: 1px solid rgba(22, 93, 255, 0.08);
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card legend {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        /* 暗黑模式卡片 */
+        body.debug-mode .card {
+            background: var(--dark-card-bg);
+            border-color: var(--dark-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        body.debug-mode .card:hover {
+            background: var(--dark-card-hover);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        body.debug-mode .card legend {
+            color: var(--secondary-light);
+        }
+
+        /* 弹性布局容器 */
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .flex-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .flex-group.right {
+            margin-left: auto;
+        }
+
+        /* 按钮样式 - 立体科技感设计 */
+        button {
+            padding: 0.45rem 0.9rem;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            /* 立体效果 */
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 
+                        0 2px 4px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.05);
+            transition: var(--transition-fast);
+        }
+
+        button:hover::after {
+            background: rgba(255,255,255,0.1);
+        }
+
+        button:active {
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 
+                        0 1px 2px rgba(0,0,0,0.1);
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        button:disabled::after {
+            display: none;
+        }
+
+        /* 按钮颜色变体 */
+        button.primary {
+            background: linear-gradient(180deg, var(--primary-light), var(--primary-color), var(--primary-dark));
+            color: #FFFFFF;
+        }
+
+        button.primary:hover {
+            background: linear-gradient(180deg, var(--primary-color), var(--primary-dark), #0A36A8);
+            box-shadow: var(--shadow-glow), 
+                        inset 0 1px 0 rgba(255,255,255,0.2), 
+                        0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        button.secondary {
+            background: linear-gradient(180deg, #F1F5F9, #E2E8F0, #CBD5E1);
+            color: #1E293B;
+            border: 1px solid #E2E8F0;
+        }
+
+        button.secondary:hover {
+            background: linear-gradient(180deg, #E2E8F0, #CBD5E1, #94A3B8);
+        }
+
+        button.danger {
+            background: linear-gradient(180deg, #FF6B6B, var(--danger-color), #D92D20);
+            color: #FFFFFF;
+        }
+
+        button.danger:hover {
+            background: linear-gradient(180deg, var(--danger-color), #D92D20, #B91C1C);
+        }
+
+        button.success {
+            background: linear-gradient(180deg, #4ADE80, var(--success-color), #059669);
+            color: #FFFFFF;
+        }
+
+        button.success:hover {
+            background: linear-gradient(180deg, var(--success-color), #059669, #047857);
+        }
+
+        /* 暗黑模式按钮 */
+        body.debug-mode button.secondary {
+            background: linear-gradient(180deg, #334155, #273449, #1E293B);
+            color: var(--dark-text);
+            border-color: #334155;
+        }
+
+        body.debug-mode button.secondary:hover {
+            background: linear-gradient(180deg, #475569, #334155, #273449);
+        }
+
+        /* 工具按钮样式 */
+        .tool-button {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border-radius: var(--border-radius-sm);
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+        }
+
+        .tool-button:hover {
+            background: #EFF6FF;
+            border-color: var(--primary-light);
+        }
+
+        .tool-button.active {
+            background: linear-gradient(180deg, var(--primary-light), var(--primary-color));
+            color: #FFFFFF;
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-glow), 0 2px 3px rgba(0,0,0,0.05);
+        }
+
+        body.debug-mode .tool-button {
+            background: var(--dark-input-bg);
+            border-color: var(--dark-border);
+            color: var(--dark-text);
+        }
+
+        body.debug-mode .tool-button:hover {
+            background: #334155;
+            border-color: var(--secondary-light);
+        }
+
+        body.debug-mode .tool-button.active {
+            background: linear-gradient(180deg, var(--primary-light), var(--primary-color));
+            border-color: var(--primary-color);
+        }
+
+        /* 输入框和选择框样式 */
+        input[type=text],
+        input[type=number],
+        select,
+        input[type=file] {
+            font-size: 0.95rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #1E293B;
+            transition: var(--transition-fast);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        input[type=text]:focus,
+        input[type=number]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-glow), 
+                        inset 0 1px 2px rgba(0,0,0,0.05);
+            border-width: 1px;
+        }
+
+        input[type=file] {
+            padding: 0.4rem;
+            border: 1px dashed #CBD5E1;
+            background: #F8FAFC;
+        }
+
+        input[type=file]::file-selector-button {
+            padding: 0.35rem 0.7rem;
+            border-radius: var(--border-radius-sm);
+            border: none;
+            background: linear-gradient(180deg, var(--primary-light), var(--primary-color));
+            color: #FFFFFF;
+            cursor: pointer;
+            margin-right: 0.8rem;
+            transition: var(--transition-fast);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+        }
+
+        input[type=file]::file-selector-button:hover {
+            background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
+        }
+
+        label {
+            margin-right: 6px;
+            font-weight: 500;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        /* 暗黑模式输入控件 */
+        body.debug-mode input[type=text],
+        body.debug-mode input[type=number],
+        body.debug-mode select {
+            background: var(--dark-input-bg);
+            color: var(--dark-input-text);
+            border-color: var(--dark-border);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        body.debug-mode input[type=text]:focus,
+        body.debug-mode input[type=number]:focus,
+        body.debug-mode select:focus {
+            border-color: var(--secondary-light);
+            box-shadow: 0 0 0 3px rgba(15, 198, 194, 0.2), 
+                        inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        body.debug-mode input[type=file] {
+            background: var(--dark-card-bg);
+            border-color: var(--dark-border);
+            color: var(--dark-text-light);
+        }
+
+        body.debug-mode input[type=file]::file-selector-button {
+            background: linear-gradient(180deg, var(--secondary-light), var(--secondary-color));
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+
+        body.debug-mode input[type=file]::file-selector-button:hover {
+            background: linear-gradient(180deg, var(--secondary-color), var(--secondary-dark));
+        }
+
+        body.debug-mode label {
+            color: var(--dark-text-light);
+        }
+
+        /* 日志区域样式 */
+        #log {
+            width: 100%;
+            min-height: 120px;
+            max-height: 200px;
+            padding: 0.8rem;
+            background: #F8FAFC;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid #E2E8F0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        #log div {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+
+        #log div:last-child {
+            border-bottom: none;
+        }
+
+        #log .time {
+            color: var(--secondary-color);
+            margin-right: 0.8em;
+            font-weight: 500;
+        }
+
+        #log .action {
+            color: var(--primary-color);
+            margin-right: 0.8em;
+        }
+
+        #log .error {
+            color: var(--danger-color);
+        }
+
+        #log .success {
+            color: var(--success-color);
+        }
+
+        body.debug-mode #log {
+            background: var(--dark-log-bg);
+            border-color: var(--dark-border);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        body.debug-mode #log div {
+            border-bottom-color: rgba(255,255,255,0.05);
+        }
+
+        body.debug-mode #log .time {
+            color: var(--secondary-light);
+        }
+
+        /* 画布区域样式 */
+        .canvas-container {
+            margin-top: 1rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background: #F8FAFC;
+            border-radius: var(--border-radius-md);
+            border: 1px solid #E2E8F0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        body.debug-mode .canvas-container {
+            background: var(--dark-card-bg);
+            border-color: var(--dark-border);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .canvas-title {
+            display: block;
+            text-align: center;
+            margin-bottom: 0.8rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        #canvas {
+            border: 1px solid #CBD5E1;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: var(--border-radius-sm);
+            background: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        body.debug-mode #canvas {
+            border-color: var(--dark-border);
+            background: #1E293B;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .canvas-tools {
+            margin-top: 1rem;
+            justify-content: center;
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.7);
+            border-radius: var(--border-radius-sm);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(22, 93, 255, 0.1);
+        }
+
+        body.debug-mode .canvas-tools {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: var(--dark-border);
+        }
+
+        /* 状态条样式 */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #64748B;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0.8rem;
+            background: #EFF6FF;
+            border-radius: var(--border-radius-sm);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .status-bar b {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        body.debug-mode .status-bar {
+            background: #1E293B;
+            color: var(--dark-text-light);
+            border-left-color: var(--secondary-light);
+        }
+
+        body.debug-mode .status-bar b {
+            color: var(--secondary-light);
+        }
+
+        /* 页脚样式 */
+        .footer {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #64748B;
+            flex-wrap: wrap;
+            margin: 2rem 0 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(22, 93, 255, 0.1);
+            justify-content: center;
+        }
+
+        .footer .links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer .links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            position: relative;
+            padding: 0 4px;
+        }
+
+        .footer .links a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        .footer .links a:not(:last-child)::after {
+            content: "•";
+            position: absolute;
+            right: -8px;
+            color: #94A3B8;
+        }
+
+        body.debug-mode .footer {
+            color: var(--dark-text-light);
+            border-top-color: var(--dark-border);
+        }
+
+        body.debug-mode .footer .links a {
+            color: var(--secondary-light);
+        }
+
+        body.debug-mode .footer .links a:hover {
+            color: var(--secondary-color);
+        }
+
+        body.debug-mode .footer .links a:not(:last-child)::after {
+            color: #475569;
+        }
+
+        /* 调试模式控制 */
+        .debug {
+            /* 由debug-mode类控制显示/隐藏 */
+        }
+
+        body:not(.debug-mode) .debug-only {
+            display: none !important;
+        }
+
+        body.debug-mode .debug {
+            display: flex !important;
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .main {
+                margin: 1rem auto;
+            }
+
+            .page-header h3 {
+                font-size: 1.5rem;
+            }
+
+            .card {
+                padding: 1rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .flex-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .flex-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .flex-group.right {
+                margin-left: 0;
+            }
+
+            .flex-container.options .flex-group {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .flex-container.options .flex-group label {
+                min-width: 70px;
+            }
+
+            .canvas-tools.flex-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .canvas-tools .flex-group {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            /* 按钮在移动端优化 */
+            button {
+                width: 100%;
+                padding: 0.5rem;
+            }
+
+            .tool-button {
+                width: 36px;
+                height: 36px;
+            }
+
+            .flex-group button.rotate-btn {
+                flex: 1;
+                min-width: 48%;
+            }
+
+            #log {
+                height: 150px;
+                font-size: 0.8rem;
+            }
+
+            input[type=text],
+            input[type=number],
+            select {
+                width: 100%;
+            }
+
+            input[type=file] {
+                width: 100%;
+            }
+
+            .footer {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        }
+
+        /* 特殊模式样式 */
+        .canvas-container.crop #canvas {
+            border: 2px dashed var(--primary-color);
+            cursor: grab;
+            box-shadow: var(--shadow-glow), 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        canvas.text-placement-mode {
+            border: 2px dashed var(--primary-color) !important;
+            cursor: text !important;
+            box-shadow: var(--shadow-glow), 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .canvas-container.crop .tool-buttons,
+        .canvas-container.crop .brush-buttons,
+        .canvas-container.crop .text-tools {
+            display: none;
+        }
+
+        .canvas-container.crop .crop-tools {
+            display: flex;
+        }
+
+        .text-tools,
+        .crop-tools {
+            display: none;
+        }
+
+        /* 禁用状态样式 */
+        input[type=text]:disabled,
+        input[type=number]:disabled,
+        select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background-color: #F1F5F9;
+            color: #94A3B8;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        body.debug-mode input[type=text]:disabled,
+        body.debug-mode input[type=number]:disabled,
+        body.debug-mode select:disabled {
+            background-color: #1E293B;
+            color: #64748B;
+            border-color: #334155;
+        }
+
+        /* 代码样式 */
+        code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background: #EFF6FF;
+            color: var(--primary-color);
+            border-radius: 3px;
+            font-family: 'Fira Code', ui-monospace, monospace;
+        }
+
+        body.debug-mode code {
+            background: var(--dark-code-bg);
+            color: var(--secondary-light);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <!-- 页头 -->
+        <div class="page-header">
+            <h3>电子价签控制助手</h3>
+            <p>墨水屏日历 · 蓝牙控制 · 图像传输</p>
+        </div>
+
+        <!-- 蓝牙连接卡片 -->
+        <div class="card">
+            <legend>蓝牙连接</legend>
+            <div class="flex-container">
+                <div class="flex-group">
+                    <button id="connectbutton" type="button" class="primary" onclick="preConnect()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 17V7a5 5 0 0 1 10 0v10"></path>
+                            <line x1="12" y1="12" x2="12" y2="17"></line>
+                            <line x1="19" y1="12" x2="12" y2="12"></line>
+                            <line x1="5" y1="12" x2="12" y2="12"></line>
+                        </svg>
+                        连接设备
+                    </button>
+                    <button id="reconnectbutton" type="button" class="secondary" onclick="reConnect()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path>
+                        </svg>
+                        重新连接
+                    </button>
+                    <button type="button" class="secondary" onclick="clearLog()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        清空日志
+                    </button>
+                    <!-- 调试模式切换按钮 -->
+                    <button id="debugModeToggle" type="button" class="secondary" onclick="toggleDebugMode()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <span>切换到调试模式</span>
+                    </button>
+                </div>
+                <div class="flex-group right debug debug-only">
+                    <label for="epddriver">驱动型号:</label>
+                    <select id="epddriver">
+                        <option value="01" data-color="blackWhiteColor" data-size="4.2_400_300">UC8176/UC8276(黑白)</option>
+                        <option value="03" data-color="threeColor" data-size="7.5_800_480" selected>UC8176/UC8276(三色)</option>
+                        <option value="04" data-color="blackWhiteColor" data-size="4.2_400_300">SSD1619/SSD1683(黑白)</option>
+                        <option value="02" data-color="threeColor" data-size="4.2_400_300">SSD1619/SSD1683(三色)</option>
+                        <option value="05" data-color="fourColor" data-size="4.2_400_300">JD79668(四色)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-container debug debug-only">
+                <div class="flex-group">
+                    <label for="epdpins">引脚配置:</label>
+                    <input id="epdpins" type="text" value="" placeholder="输入引脚配置">
+                    <button id="setDriverbutton" type="button" class="primary" onclick="setDriver()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        确认配置
+                    </button>
+                </div>
+            </div>
+            <div id="log"></div>
+        </div>
+
+        <!-- 设备控制卡片 -->
+        <div class="card">
+            <legend>设备控制</legend>
+            <div class="flex-container">
+                <div class="flex-group">
+                    <button id="calendarmodebutton" type="button" class="primary" onclick="syncTime(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        日历模式
+                    </button>
+                    <button id="clockmodebutton" type="button" class="primary" onclick="syncTime(2)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        时钟模式
+                    </button>
+                    <button id="clearscreenbutton" type="button" class="secondary" onclick="clearScreen()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        清除屏幕
+                    </button>
+                </div>
+                <div class="flex-group right debug debug-only">
+                    <input type="text" id="cmdTXT" value="" placeholder="输入命令">
+                    <button id="sendcmdbutton" type="button" class="primary" onclick="sendcmd()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        发送命令
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 蓝牙传图卡片 -->
+        <div class="card">
+            <legend>蓝牙传图</legend>
+            <div class="flex-container">
+                <input type="file" id="imageFile" accept=".png,.jpg,.bmp,.webp,.jpeg">
+            </div>
+
+            <!-- 图片处理选项 -->
+            <div class="flex-container options">
+                <div class="flex-group debug debug-only">
+                    <label for="canvasSize">画布尺寸:</label>
+                    <select id="canvasSize">
+                        <option value="1.54_152_152">1.54 (152x152)</option>
+                        <option value="1.54_200_200">1.54 (200x200)</option>
+                        <option value="2.13_212_104">2.13 (212x104)</option>
+                        <option value="2.13_250_122">2.13 (250x122)</option>
+                        <option value="2.66_296_152">2.66 (296x152)</option>
+                        <option value="2.9_296_128">2.9 (296x128)</option>
+                        <option value="2.9_384_168">2.9 (384x168)</option>
+                        <option value="3.5_384_184">3.5 (384x184)</option>
+                        <option value="3.7_416_240">3.7 (416x240)</option>
+                        <option value="3.97_800_480">3.97 (800x480)</option>
+                        <option value="4.2_400_300">4.2 (400x300)</option>
+                        <option value="5.79_792_272">5.79 (792x272)</option>
+                        <option value="7.5_800_480" selected>7.5 (800x480)</option>
+                        <option value="10.2_960_640">10.2 (960x640)</option>
+                        <option value="10.85_1360_480">10.85 (1360x480)</option>
+                        <option value="11.6_960_640">11.6 (960x640)</option>
+                        <option value="4E_600_400">4E (600x400)</option>
+                        <option value="7.3E6">7.3E6 (480x800)</option>
+                    </select>
+                </div>
+                <div class="flex-group debug debug-only">
+                    <label for="ditherMode">颜色模式:</label>
+                    <select id="ditherMode">
+                        <option value="blackWhiteColor">双色(黑白)</option>
+                        <option value="threeColor" selected>三色(黑白红)</option>
+                        <option value="fourColor">四色(黑白红黄)</option>
+                        <option value="sixColor">六色(黑白红黄蓝绿)</option>
+                    </select>
+                </div>
+                <div class="flex-group">
+                    <label for="ditherAlg">抖动算法:</label>
+                    <select id="ditherAlg">
+                        <option value="floydSteinberg">Floyd-Steinberg</option>
+                        <option value="atkinson">Atkinson</option>
+                        <option value="bayer">Bayer</option>
+                        <option value="stucki">Stucki</option>
+                        <option value="jarvis">Jarvis-Judice-Ninke</option>
+                    </select>
+                </div>
+                <div class="flex-group">
+                    <label for="ditherStrength">抖动强度:</label>
+                    <input type="range" min="0" max="5" step="0.1" value="1.0" id="ditherStrength">
+                    <label id="ditherStrengthValue">1.0</label>
+                </div>
+                <div class="flex-group">
+                    <label for="ditherContrast">对比度:</label>
+                    <input type="range" min="0.5" max="2" step="0.1" value="1.2" id="ditherContrast">
+                    <label id="ditherContrastValue">1.2</label>
+                </div>
+            </div>
+
+            <div class="flex-container options debug debug-only">
+                <div class="flex-group">
+                    <label for="mtusize">MTU大小:</label>
+                    <input type="number" id="mtusize" value="20" min="0" max="255">
+                    <label for="interleavedcount">确认间隔:</label>
+                    <input type="number" id="interleavedcount" value="50" min="0" max="500">
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <b>状态：</b><span id="status">就绪</span>
+            </div>
+
+            <!-- 图片操作按钮 -->
+            <div class="flex-container">
+                <div class="flex-group">
+                    <button type="button" class="secondary debug debug-only" onclick="rotateImage(90)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        顺时针旋转
+                    </button>
+                    <button type="button" class="secondary debug debug-only" onclick="rotateImage(-90)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 10v6h6M23 14v-6h-6M20.49 15a9 9 0 0 1-14.85 3.36L1 14M23 10l-4.64-4.36A9 9 0 0 0 3.51 9"></path>
+                        </svg>
+                        逆时针旋转
+                    </button>
+                    <button type="button" class="secondary debug debug-only" onclick="rotateCanvas()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 10m18 2-3.74-3.74A9.75 9.75 0 0 0 12 3a9 9 0 0 0-9 9"></path>
+                        </svg>
+                        旋转画布
+                    </button>
+                    <button type="button" class="secondary debug debug-only" onclick="fitCanvasToImage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        铺满画布
+                    </button>
+                    <button type="button" class="secondary" onclick="clearCanvas()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        清除画布
+                    </button>
+                    <button type="button" class="secondary debug debug-only" onclick="downloadDataArray()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        下载数组
+                    </button>
+                    <button id="sendimgbutton" type="button" class="primary" onclick="sendimg()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        发送图片
+                    </button>
+                </div>
+            </div>
+
+            <!-- 画布区域 -->
+            <div class="canvas-container">
+                <div class="canvas-title">预览画布 (800x480)</div>
+                <canvas id="canvas" width="800" height="480"></canvas>
+                
+                <!-- 画布工具 -->
+                <div class="flex-container canvas-tools">
+                    <div class="flex-group tool-buttons">
+                        <button id="brush-mode" title="画笔" class="tool-button">✏️</button>
+                        <button id="eraser-mode" title="橡皮擦" class="tool-button">🧽</button>
+                        <button id="text-mode" title="添加文字" class="tool-button">T</button>
+                    </div>
+                    <div class="flex-group brush-tools">
+                        <label for="brush-color">颜色:</label>
+                        <select id="brush-color">
+                            <option value="#000000">黑色</option>
+                            <option value="#FF0000">红色</option>
+                            <option value="#FFFF00">黄色</option>
+                            <option value="#00FF00">绿色</option>
+                            <option value="#0000FF">蓝色</option>
+                            <option value="#FFFFFF">白色</option>
+                        </select>
+                        <label for="brush-size">粗细:</label>
+                        <input type="number" id="brush-size" value="2" min="1" max="100">
+                    </div>
+                </div>
+                
+                <div class="flex-container canvas-tools">
+                    <div class="flex-group text-tools">
+                        <label for="font-family">字体:</label>
+                        <select id="font-family">
+                            <option value="Arial">Arial</option>
+                            <option value="sans-serif">Sans-serif</option>
+                            <option value="monospace">Monospace</option>
+                            <option value="SimSun">宋体</option>
+                            <option value="SimHei">黑体</option>
+                            <option value="Microsoft Yahei">微软雅黑</option>
+                            <option value="Microsoft JhengHei">微软正黑体</option>
+                            <option value="KaiTi">楷体</option>
+                            <option value="NSimSun">新宋体</option>
+                            <option value="FangSong">仿宋</option>
+                            <option value="YouYuan">幼圆</option>
+                            <option value="LiSu">隶书</option>
+                            <option value="STHeiti">华文黑体</option>
+                            <option value="STXihei">华文细黑</option>
+                            <option value="STKaiti">华文楷体</option>
+                            <option value="STSong">华文宋体</option>
+                            <option value="STFangsong">华文仿宋</option>
+                            <option value="STZhongsong">华文中宋</option>
+                            <option value="STHupo">华文琥珀</option>
+                            <option value="STXinwei">华文新魏</option>
+                            <option value="STLiti">华文隶书</option>
+                            <option value="STXingkai">华文行楷</option>
+                            <option value="FZShuTi">方正舒体</option>
+                            <option value="FZYaoti">方正姚体</option>
+                            <option value="PingFang SC">苹方</option>
+                            <option value="Source Han Sans CN">思源黑体</option>
+                            <option value="Source Han Serif SC">思源宋体</option>
+                            <option value="WenQuanYi Micro Hei">文泉驿微米黑</option>
+                        </select>
+                        <label for="font-size">大小:</label>
+                        <input type="number" id="font-size" value="16" min="1" max="100">
+                    </div>
+                    <div class="flex-group text-tools">
+                        <input type="text" id="text-input" placeholder="输入文字" style="width:150px">
+                        <button id="text-bold" title="粗体" class="secondary">B</button>
+                        <button id="text-italic" title="斜体" class="secondary">I</button>
+                        <button id="add-text-btn" class="primary">添加文字</button>
+                    </div>
+                    <div class="flex-group crop-tools">
+                        <button id="crop-zoom-in" title="放大" class="secondary">+</button>
+                        <button id="crop-zoom-out" title="缩小" class="secondary">-</button>
+                        <button id="crop-move-left" title="左移" class="secondary">⇦</button>
+                        <button id="crop-move-up" title="上移" class="secondary">⇧</button>
+                        <button id="crop-move-down" title="下移" class="secondary">⇩</button>
+                        <button id="crop-move-right" title="右移" class="secondary">⇨</button>
+                        <button class="primary" onclick="finishCrop()">完成裁剪</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <div class="copyright">© 2025 电子价签控制助手</div>
+            <div class="links">
+                <a href="#" onclick="return false;">帮助文档</a>
+                <a href="#" onclick="return false;">版本信息</a>
+                <a href="#" onclick="return false;">联系我们</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/dithering.js?v=20250731"></script>
+    <script type="text/javascript" src="js/paint.js?v=20250731"></script>
+    <script type="text/javascript" src="js/crop.js?v=20250731"></script>
+    <script type="text/javascript" src="js/main.js?v=20250731"></script>
+    <script>
+        // 增强交互体验的额外脚本
+        document.addEventListener('DOMContentLoaded', function() {
+            // 抖动强度和对比度实时显示
+            const ditherStrength = document.getElementById('ditherStrength');
+            const ditherStrengthValue = document.getElementById('ditherStrengthValue');
+            const ditherContrast = document.getElementById('ditherContrast');
+            const ditherContrastValue = document.getElementById('ditherContrastValue');
+
+            ditherStrength.addEventListener('input', function() {
+                ditherStrengthValue.textContent = this.value;
+            });
+
+            ditherContrast.addEventListener('input', function() {
+                ditherContrastValue.textContent = this.value;
+            });
+
+            // 工具按钮切换效果
+            const toolButtons = document.querySelectorAll('.tool-button');
+            toolButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    toolButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // 文字样式按钮切换
+            const textBold = document.getElementById('text-bold');
+            const textItalic = document.getElementById('text-italic');
+
+            textBold.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+
+            textItalic.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+
+            // 画布尺寸变化时更新标题
+            const canvasSize = document.getElementById('canvasSize');
+            const canvasTitle = document.querySelector('.canvas-title');
+            
+            canvasSize.addEventListener('change', function() {
+                const sizeText = this.options[this.selectedIndex].text;
+                canvasTitle.textContent = `预览画布 ${sizeText.split(' ')[1]}`;
+                
+                // 更新画布实际尺寸
+                const sizeValue = this.value;
+                const sizeParts = sizeValue.split('_');
+                if (sizeParts.length >= 3) {
+                    const canvas = document.getElementById('canvas');
+                    canvas.width = parseInt(sizeParts[1]);
+                    canvas.height = parseInt(sizeParts[2]);
+                }
+            });
+
+            // 初始状态设置
+            document.getElementById('status').textContent = '就绪 - 等待操作';
+            
+            // 为按钮添加悬停动画
+            const allButtons = document.querySelectorAll('button');
+            allButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                button.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            // 初始化调试按钮文本
+            updateDebugButtonText();
+        });
+
+        // 调试模式切换函数
+        function toggleDebugMode() {
+            document.body.classList.toggle('debug-mode');
+            const isDebugMode = document.body.classList.contains('debug-mode');
+            // 显示切换提示
+            logMessage(isDebugMode ? "已切换到调试模式" : "已切换到普通模式");
+            // 更新按钮文本
+            updateDebugButtonText();
+        }
+
+        // 更新调试按钮文本
+        function updateDebugButtonText() {
+            const debugButton = document.getElementById('debugModeToggle');
+            const buttonText = debugButton.querySelector('span');
+            const isDebugMode = document.body.classList.contains('debug-mode');
+            
+            if (isDebugMode) {
+                buttonText.textContent = '切换到普通模式';
+            } else {
+                buttonText.textContent = '切换到调试模式';
+            }
+        }
+
+        // 辅助函数：在日志区域显示消息
+        function logMessage(message) {
+            const logElement = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="time">[${time}]</span><span class="action">${message}</span>`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight; // 自动滚动到底部
+        }
+    </script>
+</body>
+</html>
